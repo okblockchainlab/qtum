@@ -4416,7 +4416,7 @@ bool CWallet::InitLoadWallet()
 
 std::atomic<bool> CWallet::fFlushThreadRunning(false);
 
-void CWallet::postInitProcess(boost::thread_group& threadGroup)
+void CWallet::postInitProcess(boost::thread_group& threadGroup) // ;;;;;;
 {
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
@@ -4424,7 +4424,7 @@ void CWallet::postInitProcess(boost::thread_group& threadGroup)
 
     // Run a thread to flush wallet periodically
     if (!CWallet::fFlushThreadRunning.exchange(true)) {
-        threadGroup.create_thread(ThreadFlushWalletDB);
+        //threadGroup.create_thread(ThreadFlushWalletDB);
     }
 }
 

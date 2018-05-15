@@ -502,7 +502,7 @@ public:
 };
 
 /**
- * Internal transfers.
+ * Internal transfers.、
  * Database key is acentry<account><counter>.
  */
 class CAccountingEntry

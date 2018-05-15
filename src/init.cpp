@@ -1164,7 +1164,14 @@ bool AppInitSanityChecks()
     return LockDataDirectory(true);
 }
 
-bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
+
+extern std::string getnewaddress(const std::string& name);
+extern std::string dumpprivkey(const std::string& addr);
+extern std::string signmessage(const string& strAddress, const string& strMessage);
+extern std::string signmessagewithprivkey(const string& strPrivkey, const string& strMessage);
+extern bool verifymessage(const string& strAddress, const string& strSign, const string& strMessage);
+
+bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler) // ;;;;;;
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
@@ -1307,19 +1314,19 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // -onion can be used to set only a proxy for .onion, or override normal proxy for .onion addresses
     // -noonion (or -onion=0) disables connecting to .onion entirely
     // An empty string is used to not override the onion proxy (in which case it defaults to -proxy set above, or none)
-    std::string onionArg = GetArg("-onion", "");
-    if (onionArg != "") {
-        if (onionArg == "0") { // Handle -noonion/-onion=0
-            SetLimited(NET_TOR); // set onions as unreachable
-        } else {
-            CService resolved(LookupNumeric(onionArg.c_str(), 9050));
-            proxyType addrOnion = proxyType(resolved, proxyRandomize);
-            if (!addrOnion.IsValid())
-                return InitError(strprintf(_("Invalid -onion address: '%s'"), onionArg));
-            SetProxy(NET_TOR, addrOnion);
-            SetLimited(NET_TOR, false);
-        }
-    }
+//    std::string onionArg = GetArg("-onion", "");
+//    if (onionArg != "") {
+//        if (onionArg == "0") { // Handle -noonion/-onion=0
+//            SetLimited(NET_TOR); // set onions as unreachable
+//        } else {
+//            CService resolved(LookupNumeric(onionArg.c_str(), 9050));
+//            proxyType addrOnion = proxyType(resolved, proxyRandomize);
+//            if (!addrOnion.IsValid())
+//                return InitError(strprintf(_("Invalid -onion address: '%s'"), onionArg));
+//            SetProxy(NET_TOR, addrOnion);
+//            SetLimited(NET_TOR, false);
+//        }
+//    }
 
     // see Step 2: parameter interactions for more information about these
     fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
@@ -1740,7 +1747,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!connman.Start(scheduler, strNodeError, connOptions))
         return InitError(strNodeError);
 
-
 #ifdef ENABLE_WALLET
     // Mine proof-of-stake blocks in the background
     if (!GetBoolArg("-staking", DEFAULT_STAKE))
@@ -1756,6 +1762,25 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         pwalletMain->postInitProcess(threadGroup);
+
+
+    std::string message = "Test message";
+    std::string addr = getnewaddress("test");
+    std::string pkey = dumpprivkey(addr);
+    std::string signedmessage = signmessage(addr, message);
+
+    bool res = verifymessage(addr, signedmessage, message);
+
+
+
+    printf("addr: %s\n", addr.c_str());
+    printf("pkey: %s\n", pkey.c_str());
+    printf("sign message <%s> by addr<%s>: %s\n", message.c_str(), addr.c_str(), signedmessage.c_str());
+    printf("verify signed message <%s> and original message<%s> by addr<%s>\n", signedmessage.c_str(), message.c_str(), addr.c_str());
+    printf("    result: %d\n", res);
+
+
+    //exit(0);
 #endif
 
     return !fRequestShutdown;
@@ -1766,3 +1791,5 @@ void UnlockDataDirectory()
     // Unlock
     LockDataDirectory(true, false);
 }
+
+

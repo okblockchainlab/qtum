@@ -554,6 +554,8 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 }
 
 
+
+
 UniValue dumpwallet(const JSONRPCRequest& request)
 {
     if (!EnsureWalletIsAvailable(request.fHelp))

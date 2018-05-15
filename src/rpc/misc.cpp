@@ -391,6 +391,34 @@ UniValue verifymessage(const JSONRPCRequest& request)
     return (pubkey.GetID() == keyID);
 }
 
+
+bool verifymessage(const string& strAddress, const string& strSign, const string& strMessage)
+{
+    CBitcoinAddress addr(strAddress);
+    if (!addr.IsValid())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+
+    CKeyID keyID;
+    if (!addr.GetKeyID(keyID))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+
+    bool fInvalid = false;
+    vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
+
+    if (fInvalid)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    CPubKey pubkey;
+    if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
+        return false;
+
+    return (pubkey.GetID() == keyID);
+}
+
 UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
@@ -414,6 +442,28 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     string strPrivkey = request.params[0].get_str();
     string strMessage = request.params[1].get_str();
 
+    CBitcoinSecret vchSecret;
+    bool fGood = vchSecret.SetString(strPrivkey);
+    if (!fGood)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+    CKey key = vchSecret.GetKey();
+    if (!key.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    vector<unsigned char> vchSig;
+    if (!key.SignCompact(ss.GetHash(), vchSig))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+
+    return EncodeBase64(&vchSig[0], vchSig.size());
+}
+
+
+string signmessagewithprivkey(const string& strPrivkey, const string& strMessage)
+{
     CBitcoinSecret vchSecret;
     bool fGood = vchSecret.SetString(strPrivkey);
     if (!fGood)

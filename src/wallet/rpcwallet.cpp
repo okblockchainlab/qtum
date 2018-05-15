@@ -107,7 +107,7 @@ string AccountFromValue(const UniValue& value)
     return strAccount;
 }
 
-UniValue getnewaddress(const JSONRPCRequest& request)
+UniValue getnewaddress(const JSONRPCRequest& request)// ;;;;;;
 {
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
@@ -148,6 +148,40 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     return CBitcoinAddress(keyID).ToString();
 }
 
+string getnewaddress(const string& name) {
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount = AccountFromValue(name);
+
+    if (!pwalletMain->IsLocked())
+        pwalletMain->TopUpKeyPool();
+
+    // Generate a new key that is added to wallet
+    CPubKey newKey;
+    if (!pwalletMain->GetKeyFromPool(newKey))
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    CKeyID keyID = newKey.GetID();
+
+    pwalletMain->SetAddressBook(keyID, strAccount, "receive");
+
+    return CBitcoinAddress(keyID).ToString();
+}
+
+std::string dumpprivkey(const std::string& strAddress) {
+
+//    string strAddress = request.params[0].get_str();
+    CBitcoinAddress address;
+    if (!address.SetString(strAddress))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Qtum address");
+    if (fWalletUnlockStakingOnly)
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Wallet is unlocked for staking only.");
+    CKeyID keyID;
+    if (!address.GetKeyID(keyID))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    CKey vchSecret;
+    if (!pwalletMain->GetKey(keyID, vchSecret))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+    return CBitcoinSecret(vchSecret).ToString();
+}
 
 CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
@@ -1009,6 +1043,33 @@ UniValue signmessage(const JSONRPCRequest& request)
 
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
+
+
+string signmessage(const string& strAddress, const string& strMessage) //verifymessage
+{
+    CBitcoinAddress addr(strAddress);
+    if (!addr.IsValid())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+
+    CKeyID keyID;
+    if (!addr.GetKeyID(keyID))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+
+    CKey key;
+    if (!pwalletMain->GetKey(keyID, key))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
+
+    vector<unsigned char> vchSig;
+    if (!key.SignCompact(ss.GetHash(), vchSig))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+
+    return EncodeBase64(&vchSig[0], vchSig.size());
+}
+
 
 UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 {
