@@ -406,6 +406,42 @@ UniValue verifytxoutproof(const JSONRPCRequest& request)
     return res;
 }
 
+UniValue getaddressbyprivatekey(const JSONRPCRequest& request) {
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+        throw runtime_error(
+                "getaddressbyprivatekey \"privatekey\"\n"
+                "\nArguments:\n"
+                "1. \"privatekey\"      (string, required) The base58 privatekey\n"
+                "\nResult:\n"
+                "\"hexaddress\"      (string) The address for the private key\n"
+                "\nExamples:\n"
+                + HelpExampleCli("getaddressbyprivatekey", "\"L43NUb18bYnsZr8SaudQtLczX2SJz6KQG6tnXWJTM46po7m4m49h\"")
+                + HelpExampleRpc("getaddressbyprivatekey", "\"Kyhdf5LuKTRx4ge69ybABsiUAWjVRK4XGxAKk2FQLp2HjGMy87Z4\"")
+        );
+
+    CBitcoinSecret BitcoinSecret;
+    BitcoinSecret.SetString(request.params[0].get_str());
+
+    if (!BitcoinSecret.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+    }
+
+    CKey key = BitcoinSecret.GetKey();
+    CPubKey pubkey = key.GetPubKey();
+    CKeyID keyId = pubkey.GetID();
+    CBitcoinAddress BitcoinAddress;
+    BitcoinAddress.Set(keyId);
+
+    if (!BitcoinAddress.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+
+    string addr = BitcoinAddress.ToString();
+
+    cout << addr << endl;
+    return addr;
+}
+
 UniValue createrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
@@ -1083,6 +1119,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false, {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
     { "rawtransactions",    "gethexaddress",          &gethexaddress,          true,  {"address",} },
     { "rawtransactions",    "fromhexaddress",         &fromhexaddress,         true,  {"hexaddress",} },
+    { "rawtransactions",    "getaddressbyprivatekey", &getaddressbyprivatekey, true,  {"privkeys"} },
 
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          true,  {"txids", "blockhash"} },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true,  {"proof"} },

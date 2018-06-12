@@ -21,6 +21,7 @@
 #include "rpc/server.h"
 #include "rpc/register.h"
 #include "script/sigcache.h"
+#include "base58.h"
 
 #include <memory>
 
@@ -249,9 +250,6 @@ bool ShutdownRequested()
   return false;
 }
 
-
-
-
 JNIEXPORT jobjectArray JNICALL
 Java_com_okcoin_vault_jni_qtum_Qtumj_execute(JNIEnv *env, jclass, jstring networkType, jstring command) {
 
@@ -259,7 +257,6 @@ Java_com_okcoin_vault_jni_qtum_Qtumj_execute(JNIEnv *env, jclass, jstring networ
     std::list<std::string> resultList = invokeRpc(jstring2char(env, command));
     return stringList2jobjectArray(env, resultList);
 }
-
 
 
 std::list<std::string> invokeRpc(std::string args)
@@ -284,6 +281,9 @@ std::list<std::string> invokeRpc(std::string args)
     request.fHelp = false;
 
     if (tableRPC[strMethod] == NULL) {
+
+        resultList.push_back("Error");
+        resultList.push_back("No such a Jni Api " + strMethod);
         return resultList;
     }
 
@@ -297,11 +297,11 @@ std::list<std::string> invokeRpc(std::string args)
             res = result.get_str();
 
             cout << endl;
-            cout << "Unsigned transaction hex:" << endl;
+            cout << strMethod << " result:" << endl;
             cout << "====================================================" << endl;
             cout << res << endl << endl;
 
-            resultList.push_back("UnsignedTx");
+            resultList.push_back(strMethod + " result");
             resultList.push_back(result.get_str());
 
         } else if (result.size() >= 2) {
@@ -311,11 +311,11 @@ std::list<std::string> invokeRpc(std::string args)
                 res = find_value(result.get_obj(), "hex").get_str();
 
                 cout << endl;
-                cout << "Signed transaction hex:" << endl;
+                cout << strMethod << " result:" << endl;
                 cout << "====================================================" << endl;
                 cout << res << endl;
 
-                resultList.push_back("SignedTx");
+                resultList.push_back(strMethod + " result");
                 resultList.push_back(res);
             }
 
@@ -331,11 +331,34 @@ std::list<std::string> invokeRpc(std::string args)
 }
 
 void invokeLocalRpc() {
+
+    printf("blocked\n");
+    char ch = getchar();
+    while (ch != '\n')
+    {
+        ch = getchar();
+    }
+
     TestingSetup ts("main");
+
+    CBitcoinSecret BitcoinSecret;
+    BitcoinSecret.SetString("L43NUb18bYnsZr8SaudQtLczX2SJz6KQG6tnXWJTM46po7m4m49h");
+
+    CKey key = BitcoinSecret.GetKey();
+    CPubKey pubkey = key.GetPubKey();
+
+    CKeyID keyId = pubkey.GetID();
+    CBitcoinAddress BitcoinAddress;
+    BitcoinAddress.Set(keyId);
+    string addr = BitcoinAddress.ToString();
+
+    cout << "Address: " << addr << endl;
+
     std::string createTx = "createrawtransaction [{\"txid\":\"b4cc287e58f87cdae59417329f710f3ecd75a4ee1d2872b7248f50977c8493f3\",\"vout\":1,\"scriptPubKey\":\"a914b10c9df5f7edf436c697f02f1efdba4cf399615187\",\"redeemScript\":\"512103debedc17b3df2badbcdd86d5feb4562b86fe182e5998abd8bcd4f122c6155b1b21027e940bb73ab8732bfdf7f9216ecefca5b94d6df834e77e108f68e66f126044c052ae\"}] {\"MQ3Jx2krKJbDgAcxJrXvL73KXH4zVf8mWg\":11}";
     invokeRpc(createTx);
+
     std::string signTx = "signrawtransaction 0200000001f393847c97508f24b772281deea475cd3e0f719f321794e5da7cf8587e28ccb40100000000ffffffff0100ab90410000000017a914b10c9df5f7edf436c697f02f1efdba4cf39961518700000000 [{\"txid\":\"b4cc287e58f87cdae59417329f710f3ecd75a4ee1d2872b7248f50977c8493f3\",\"vout\":1,\"scriptPubKey\":\"a914b10c9df5f7edf436c697f02f1efdba4cf399615187\",\"redeemScript\":\"512103debedc17b3df2badbcdd86d5feb4562b86fe182e5998abd8bcd4f122c6155b1b21027e940bb73ab8732bfdf7f9216ecefca5b94d6df834e77e108f68e66f126044c052ae\"}] [\"KzsXybp9jX64P5ekX1KUxRQ79Jht9uzW7LorgwE65i5rWACL6LQe\",\"Kyhdf5LuKTRx4ge69ybABsiUAWjVRK4XGxAKk2FQLp2HjGMy87Z4\"]";
-    std::list<std::string> res = invokeRpc(signTx);
+    invokeRpc(signTx);
 }
 
 jstring char2jstring(JNIEnv* env, const char* pat)
