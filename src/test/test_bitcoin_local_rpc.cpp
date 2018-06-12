@@ -24,9 +24,7 @@
 #include "base58.h"
 
 #include <memory>
-
 #include "com_okcoin_vault_jni_qtum_Qtumj.h"
-
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
@@ -40,11 +38,12 @@
 using namespace std;
 //-I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin
 
-std::unique_ptr<CConnman> g_connman;
+std::unique_ptr<CConnman> g_connman2;
 FastRandomContext insecure_rand_ctx(true);
 
 extern bool fPrintToConsole;
 extern void noui_connect();
+
 
 extern void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 extern void SelectParams(const std::string& network);
@@ -93,7 +92,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 BasicTestingSetup::~BasicTestingSetup()
 {
     ECC_Stop();
-    g_connman.reset();
+    g_connman2.reset();
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
@@ -152,8 +151,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     nScriptCheckThreads = 3;
     for (int i = 0; i < nScriptCheckThreads - 1; i++)
         threadGroup.create_thread(&ThreadScriptCheck);
-    g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
-    connman = g_connman.get();
+    g_connman2 = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
+    connman = g_connman2.get();
     RegisterNodeSignals(GetNodeSignals());
 }
 
@@ -235,20 +234,20 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn, CTxMemPo
                            inChainValue, spendsCoinbase, sigOpCost, lp);
 }
 
-void Shutdown(void* parg)
-{
-  exit(0);
-}
-
-void StartShutdown()
-{
-  exit(0);
-}
-
-bool ShutdownRequested()
-{
-  return false;
-}
+//void Shutdown(void* parg)
+//{
+//  exit(0);
+//}
+//
+//void StartShutdown()
+//{
+//  exit(0);
+//}
+//
+//bool ShutdownRequested()
+//{
+//  return false;
+//}
 
 JNIEXPORT jobjectArray JNICALL
 Java_com_okcoin_vault_jni_qtum_Qtumj_execute(JNIEnv *env, jclass, jstring networkType, jstring command) {
@@ -261,7 +260,15 @@ Java_com_okcoin_vault_jni_qtum_Qtumj_execute(JNIEnv *env, jclass, jstring networ
 
 std::list<std::string> invokeRpc(std::string args)
 {
-    RegisterRawTransactionRPCCommands(tableRPC);
+    static bool init = false;
+    if (!init) {
+        RegisterBlockchainRPCCommands(tableRPC);
+        RegisterNetRPCCommands(tableRPC);
+        RegisterMiscRPCCommands(tableRPC);
+        RegisterMiningRPCCommands(tableRPC);
+        RegisterRawTransactionRPCCommands(tableRPC);
+        init = true;
+    }
 
     cout << endl;
     cout << "Invoke Local Rpc: " << endl;

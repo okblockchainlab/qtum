@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-./autogen.sh
-
-./configure --with-gui=no --enable-debug -disable-gui-tests --disable-bench
-
 git submodule init && git submodule update
+
+
+./autogen.sh
+./configure --with-gui=no --enable-debug -disable-gui-tests --disable-bench
 #make -j 6 V=1
 
 cd src
