@@ -4424,7 +4424,7 @@ void CWallet::postInitProcess(boost::thread_group& threadGroup) // ;;;;;;
 
     // Run a thread to flush wallet periodically
     if (!CWallet::fFlushThreadRunning.exchange(true)) {
-        //threadGroup.create_thread(ThreadFlushWalletDB);
+        threadGroup.create_thread(ThreadFlushWalletDB);
     }
 }
 

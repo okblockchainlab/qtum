@@ -1,5 +1,11 @@
 *.tar.gz
 
+/stateQtum
+/blocks
+/build
+/*.dat
+/chainstate
+
 *.exe
 src/qtum-cli
 src/qtum-tx
@@ -122,3 +128,7 @@ contrib/devtools/split-debug.sh
 .idea/
 CMakeLists.txt
 cmake-build-debug/
+qtumd.dylib
+.lock
+qtumrpc
+qtumd.so
