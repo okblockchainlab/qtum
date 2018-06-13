@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+if [ -z "$JAVA_HOME" ]; then
+	printf "No JAVA_HOME detected! "
+	printf "Setup JAVA_HOME before build: export JAVA_HOME=/path/to/java\\n"
+	exit 1
+fi
+
 git submodule init && git submodule update
 
 ./autogen.sh
