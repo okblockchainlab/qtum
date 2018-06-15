@@ -274,7 +274,7 @@ std::list<std::string> invokeRpc(std::string args)
     cout << endl;
     cout << "Invoke Local Rpc: " << endl;
     cout << "===================================================================" << endl;
-    cout << args << endl;
+    cout << "Rpc Request: " << args << endl;
 
     std::list<std::string> resultList;
     UniValue result;
@@ -300,46 +300,26 @@ std::list<std::string> invokeRpc(std::string args)
     try {
         result = (*method)(request);
 
-
-//        const std::vector<std::string> keys = result.getKeys();
-//
-//        cout << "====================================================" << endl;
-//
-//        for (int i = 0; i < keys.size(); ++i) {
-//
-//            cout << "key: " << keys[i] << endl;
-//
-//        }
-//        cout << "====================================================" << endl;
-
-
         if (result.size() == 0) {
 
             res = result.get_str();
-
-            cout << endl;
-            cout << strMethod << " result:" << endl;
-            cout << "====================================================" << endl;
-            cout << res << endl << endl;
-
+            cout << strMethod << " result: " << res << endl << endl;
             resultList.push_back(strMethod + " result");
             resultList.push_back(result.get_str());
 
-        } else if (result.size() >= 2) {
+        } else if (result.size() >= 1) {
+
+            const std::vector<std::string> keys = result.getKeys();
+            for (size_t i = 0; i < keys.size(); ++i) {
+                cout << strMethod << " response key: " << keys[i] << endl;
+            }
 
             if (find_value(result.get_obj(), "complete").get_bool()) {
-
                 res = find_value(result.get_obj(), "hex").get_str();
-
-                cout << endl;
-                cout << strMethod << " result:" << endl;
-                cout << "====================================================" << endl;
-                cout << res << endl;
-
+                cout << strMethod << " result: " << res << endl << endl;
                 resultList.push_back(strMethod + " result");
                 resultList.push_back(res);
             }
-
         }
     }
     catch (const UniValue &objError) {
