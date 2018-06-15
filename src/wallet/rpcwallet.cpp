@@ -1640,8 +1640,8 @@ extern CScript _createmultisig_redeemScript(const UniValue& params);
 
 UniValue addmultisigaddress(const JSONRPCRequest& request)
 {
-    if (!EnsureWalletIsAvailable(request.fHelp))
-        return NullUniValue;
+//    if (!EnsureWalletIsAvailable(request.fHelp))
+//        return NullUniValue;
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
     {
@@ -1671,7 +1671,10 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
         throw runtime_error(msg);
     }
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    if (pwalletMain != NULL) {
+
+        LOCK2(cs_main, pwalletMain->cs_wallet);
+    }
 
     string strAccount;
     if (request.params.size() > 2)
@@ -1680,9 +1683,12 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(request.params);
     CScriptID innerID(inner);
-    pwalletMain->AddCScript(inner);
 
-    pwalletMain->SetAddressBook(innerID, strAccount, "send");
+    if (pwalletMain != NULL) {
+        pwalletMain->AddCScript(inner);
+
+        pwalletMain->SetAddressBook(innerID, strAccount, "send");
+    }
     return CBitcoinAddress(innerID).ToString();
 }
 
@@ -3794,6 +3800,8 @@ static const CRPCCommand commands[] =
 
 void RegisterWalletRPCCommands(CRPCTable &t)
 {
+    printf("reg <%s>\n", "RegisterWalletRPCCommands");
+
     if (GetBoolArg("-disablewallet", false))
         return;
 

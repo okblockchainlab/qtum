@@ -108,7 +108,16 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
 
-    RegisterAllCoreRPCCommands(tableRPC);
+    static bool init = false;
+    if (!init) {
+        RegisterWalletRPCCommands(tableRPC);
+        RegisterBlockchainRPCCommands(tableRPC);
+        RegisterNetRPCCommands(tableRPC);
+        RegisterMiscRPCCommands(tableRPC);
+        RegisterMiningRPCCommands(tableRPC);
+        RegisterRawTransactionRPCCommands(tableRPC);
+        init = true;
+    }
     ClearDatadirCache();
     pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long) GetTime(), (int) (GetRand(100000)));
     boost::filesystem::create_directories(pathTemp);
@@ -260,15 +269,6 @@ Java_com_okcoin_vault_jni_qtum_Qtumj_execute(JNIEnv *env, jclass, jstring networ
 
 std::list<std::string> invokeRpc(std::string args)
 {
-    static bool init = false;
-    if (!init) {
-        RegisterBlockchainRPCCommands(tableRPC);
-        RegisterNetRPCCommands(tableRPC);
-        RegisterMiscRPCCommands(tableRPC);
-        RegisterMiningRPCCommands(tableRPC);
-        RegisterRawTransactionRPCCommands(tableRPC);
-        init = true;
-    }
 
     cout << endl;
     cout << "Invoke Local Rpc: " << endl;
