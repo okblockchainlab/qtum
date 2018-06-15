@@ -45,6 +45,7 @@ extern bool fPrintToConsole;
 extern void noui_connect();
 
 
+extern void RegisterWalletRPCCommands(CRPCTable &tableRPC);
 extern void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 extern void SelectParams(const std::string& network);
 extern UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
@@ -298,6 +299,19 @@ std::list<std::string> invokeRpc(std::string args)
     rpcfn_type method = tableRPC[strMethod]->actor;
     try {
         result = (*method)(request);
+
+
+//        const std::vector<std::string> keys = result.getKeys();
+//
+//        cout << "====================================================" << endl;
+//
+//        for (int i = 0; i < keys.size(); ++i) {
+//
+//            cout << "key: " << keys[i] << endl;
+//
+//        }
+//        cout << "====================================================" << endl;
+
 
         if (result.size() == 0) {
 
