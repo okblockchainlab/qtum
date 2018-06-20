@@ -184,80 +184,6 @@ TestingSetup::~TestingSetup()
     boost::filesystem::remove_all(pathTemp);
 }
 
-TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
-{
-    // Generate a 100-block chain:
-    coinbaseKey.MakeNewKey(true);
-    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < COINBASE_MATURITY; i++)
-    {
-        std::vector<CMutableTransaction> noTxns;
-        CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
-        coinbaseTxns.push_back(*b.vtx[0]);
-    }
-}
-
-//
-// Create a new block with just given transactions, coinbase paying to
-// scriptPubKey, and try to add it to the current chain.
-//
-CBlock
-TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
-{
-    const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
-    CBlock& block = pblocktemplate->block;
-
-    // Replace mempool-selected txns with just coinbase plus passed-in txns:
-    block.vtx.resize(1);
-    BOOST_FOREACH(const CMutableTransaction& tx, txns)
-        block.vtx.push_back(MakeTransactionRef(tx));
-    block.nTime = chainActive.Tip()->GetBlockTime() + 1;
-    // IncrementExtraNonce creates a valid coinbase and merkleRoot
-    unsigned int extraNonce = 0;
-    IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
-
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
-
-    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, NULL);
-
-    CBlock result = block;
-    return result;
-}
-
-TestChain100Setup::~TestChain100Setup()
-{
-}
-
-
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx, CTxMemPool *pool) {
-    CTransaction txn(tx);
-    return FromTx(txn, pool);
-}
-
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn, CTxMemPool *pool) {
-    // Hack to assume either it's completely dependent on other mempool txs or not at all
-    CAmount inChainValue = pool && pool->HasNoInputsOf(txn) ? txn.GetValueOut() : 0;
-
-    return CTxMemPoolEntry(MakeTransactionRef(txn), nFee, nTime, dPriority, nHeight,
-                           inChainValue, spendsCoinbase, sigOpCost, lp);
-}
-
-//void Shutdown(void* parg)
-//{
-//  exit(0);
-//}
-//
-//void StartShutdown()
-//{
-//  exit(0);
-//}
-//
-//bool ShutdownRequested()
-//{
-//  return false;
-//}
 
 JNIEXPORT jobjectArray JNICALL
 Java_com_okcoin_vault_jni_qtum_Qtumj_execute(JNIEnv *env, jclass, jstring networkType, jstring command) {
@@ -266,7 +192,6 @@ Java_com_okcoin_vault_jni_qtum_Qtumj_execute(JNIEnv *env, jclass, jstring networ
     std::list<std::string> resultList = invokeRpc(jstring2char(env, command));
     return stringList2jobjectArray(env, resultList);
 }
-
 
 std::list<std::string> invokeRpc(std::string args)
 {
@@ -299,28 +224,7 @@ std::list<std::string> invokeRpc(std::string args)
     rpcfn_type method = tableRPC[strMethod]->actor;
     try {
         result = (*method)(request);
-
-        if (result.size() == 0) {
-
-            res = result.get_str();
-            cout << strMethod << " result: " << res << endl << endl;
-            resultList.push_back(strMethod + " result");
-            resultList.push_back(result.get_str());
-
-        } else if (result.size() >= 1) {
-
-            const std::vector<std::string> keys = result.getKeys();
-            for (size_t i = 0; i < keys.size(); ++i) {
-                cout << strMethod << " response key: " << keys[i] << endl;
-            }
-
-            if (find_value(result.get_obj(), "complete").get_bool()) {
-                res = find_value(result.get_obj(), "hex").get_str();
-                cout << strMethod << " result: " << res << endl << endl;
-                resultList.push_back(strMethod + " result");
-                resultList.push_back(res);
-            }
-        }
+        result.feedStringList(resultList);
     }
     catch (const UniValue &objError) {
         result = objError;
@@ -355,11 +259,30 @@ void invokeLocalRpc() {
 
     cout << "Address: " << addr << endl;
 
+    cout << "------------------------------------------" << endl;
+
+    std::string cmd = "signrawtransaction 0200000001b2fa59b9b4d3858e5d560407d68b9336420490043a2daabd31a83f0449807fdd0000000000ffffffff01c0175302000000001976a914f1b5be282a20fb932a648fc4c9decb253399979488ac00000000 [{\"txid\":\"dd7f8049043fa831bdaa2d3a0490044236938bd60704565d8e85d3b4b959fab2\",\"vout\":0,\"scriptPubKey\":\"a91404a477f8bfe145d24fdef8b219e84b3f6b09c75687\",\"redeemScript\":\"522102cc37dcc588eb08484d0d74bee9c7e7f6f818129e49abc04b25e842c6247be56c2102cf0215383cf70e8318ab09e5ec88235e878c1a4e54d6fe8e37f9da21928856eb210212360211f166a465c0e346f8538512784e9c0d5b0b9a15b465a33e6af1c1500253ae\"}] [\"L2S6o32XWJFo3xZ1hdgTh98XYtM565veYERXZZamWLUqCBADLYXs\"]";
+    std::list<std::string> results = invokeRpc(cmd);
+
+    for (auto const& r: results) {
+        cout << r << endl;
+    }
+    cout << "------------------------------------------" << endl;
+
     std::string createTx = "createrawtransaction [{\"txid\":\"b4cc287e58f87cdae59417329f710f3ecd75a4ee1d2872b7248f50977c8493f3\",\"vout\":1,\"scriptPubKey\":\"a914b10c9df5f7edf436c697f02f1efdba4cf399615187\",\"redeemScript\":\"512103debedc17b3df2badbcdd86d5feb4562b86fe182e5998abd8bcd4f122c6155b1b21027e940bb73ab8732bfdf7f9216ecefca5b94d6df834e77e108f68e66f126044c052ae\"}] {\"MQ3Jx2krKJbDgAcxJrXvL73KXH4zVf8mWg\":11}";
-    invokeRpc(createTx);
+    results = invokeRpc(createTx);
+
+    for (auto const& r: results) {
+        cout << r << endl;
+    }
+    cout << "------------------------------------------" << endl;
 
     std::string signTx = "signrawtransaction 0200000001f393847c97508f24b772281deea475cd3e0f719f321794e5da7cf8587e28ccb40100000000ffffffff0100ab90410000000017a914b10c9df5f7edf436c697f02f1efdba4cf39961518700000000 [{\"txid\":\"b4cc287e58f87cdae59417329f710f3ecd75a4ee1d2872b7248f50977c8493f3\",\"vout\":1,\"scriptPubKey\":\"a914b10c9df5f7edf436c697f02f1efdba4cf399615187\",\"redeemScript\":\"512103debedc17b3df2badbcdd86d5feb4562b86fe182e5998abd8bcd4f122c6155b1b21027e940bb73ab8732bfdf7f9216ecefca5b94d6df834e77e108f68e66f126044c052ae\"}] [\"KzsXybp9jX64P5ekX1KUxRQ79Jht9uzW7LorgwE65i5rWACL6LQe\",\"Kyhdf5LuKTRx4ge69ybABsiUAWjVRK4XGxAKk2FQLp2HjGMy87Z4\"]";
-    invokeRpc(signTx);
+    results = invokeRpc(signTx);
+
+    for (auto const& r: results) {
+        cout << r << endl;
+    }
 }
 
 jstring char2jstring(JNIEnv* env, const char* pat)
@@ -404,4 +327,3 @@ char* jstring2char(JNIEnv* env, jstring jstr)
     env->ReleaseByteArrayElements(barr, ba, 0);
     return rtn;
 }
-

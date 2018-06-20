@@ -7,6 +7,7 @@
 #define __UNIVALUE_H__
 
 #include <stdint.h>
+#include <list>
 
 #include <string>
 #include <vector>
@@ -129,7 +130,11 @@ public:
         return read(rawStr.c_str());
     }
 
+    void feedStringList(std::list<std::string>& kvList, const std::string& context = "");
+
 private:
+    void feedStringList(const std::string& key, UniValue& value, const std::string& context, std::list<std::string>& kvList);
+
     UniValue::VType typ;
     std::string val;                       // numbers are stored as C++ strings
     std::vector<std::string> keys;

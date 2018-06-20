@@ -14,6 +14,10 @@ case "$TARGET_OS" in
         echo "Unknown platform!" >&2
         exit 1
 esac
+
 rm qtumd.${EXT}
 make qtumd.${EXT} -f Makefile.qtumd.so -j 6 V=1
+
+rm qtumrpc
+make qtumrpc -f Makefile.qtumd.so -j 6 V=1
 
