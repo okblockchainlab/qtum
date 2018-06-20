@@ -36,15 +36,6 @@
 #include <stdio.h>
 
 using namespace std;
-//-I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin
-
-std::unique_ptr<CConnman> g_connman2;
-FastRandomContext insecure_rand_ctx(true);
-
-extern bool fPrintToConsole;
-extern void noui_connect();
-
-
 extern void RegisterWalletRPCCommands(CRPCTable &tableRPC);
 extern void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 extern void SelectParams(const std::string& network);
@@ -54,6 +45,15 @@ jobjectArray stringList2jobjectArray(JNIEnv* env, const list<string>& stringList
 jstring char2jstring(JNIEnv* env, const char* pat);
 std::list<std::string> invokeRpc(std::string args);
 boost::filesystem::path GetTempPath();
+//-I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin
+
+std::unique_ptr<CConnman> g_connman2;
+FastRandomContext insecure_rand_ctx(true);
+
+extern bool fPrintToConsole;
+extern void noui_connect();
+
+
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 {

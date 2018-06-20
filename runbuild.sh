@@ -6,6 +6,8 @@ if [ -z "$JAVA_HOME" ]; then
 	exit 1
 fi
 
+PROJECT_NAME=qtum
+
 git submodule init && git submodule update
 
 ./autogen.sh
@@ -29,5 +31,5 @@ case "$TARGET_OS" in
 esac
 
 cd src
-make qtumd.${EXT} -f Makefile.qtumd.so -j 6 V=1
-nm qtumd.${EXT} |grep okcoin
+make ${PROJECT_NAME}d.${EXT} -f Makefile.so.include -j 6 V=1
+nm ${PROJECT_NAME}d.${EXT} |grep okcoin
