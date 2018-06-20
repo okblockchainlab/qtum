@@ -246,17 +246,18 @@ void invokeLocalRpc() {
 
     TestingSetup ts("main");
 
+
+    // addr: Qb9XDawkh7o5cXXPa5YsxBY4p1TJs4FZsb
+    // pkey: L43NUb18bYnsZr8SaudQtLczX2SJz6KQG6tnXWJTM46po7m4m49h
     CBitcoinSecret BitcoinSecret;
     BitcoinSecret.SetString("L43NUb18bYnsZr8SaudQtLczX2SJz6KQG6tnXWJTM46po7m4m49h");
 
     CKey key = BitcoinSecret.GetKey();
     CPubKey pubkey = key.GetPubKey();
-
     CKeyID keyId = pubkey.GetID();
     CBitcoinAddress BitcoinAddress;
     BitcoinAddress.Set(keyId);
     string addr = BitcoinAddress.ToString();
-
     cout << "Address: " << addr << endl;
 
     cout << "------------------------------------------" << endl;

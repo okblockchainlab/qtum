@@ -18,6 +18,7 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "utilstrencodings.h"
+#include "base58.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -25,6 +26,7 @@
 
 #include <stdio.h>
 
+using namespace std;
 /* Introduction text for doxygen: */
 
 /*! \mainpage Developer documentation
@@ -195,3 +197,10 @@ int main(int argc, char* argv[])
 
     return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
+
+//extern void invokeLocalRpc();
+//int main2(int argc, char* argv[])
+//{
+//    invokeLocalRpc();
+//    return 0;
+//}
