@@ -1,6 +1,6 @@
 #!/bin/bash
 EXT=so
-
+PROJECT_NAME=qtum
 TARGET_OS=`uname -s`
 
 case "$TARGET_OS" in
@@ -15,9 +15,9 @@ case "$TARGET_OS" in
         exit 1
 esac
 
-rm qtumd.${EXT}
-make qtumd.${EXT} -f Makefile.qtumd.so -j 6 V=1
+rm ${PROJECT_NAME}d.${EXT}
+make ${PROJECT_NAME}d.${EXT} -f Makefile.so.include -j 6 V=1
 
-rm qtumrpc
-make qtumrpc -f Makefile.qtumd.so -j 6 V=1
+rm ${PROJECT_NAME}rpc
+make ${PROJECT_NAME}rpc -f Makefile.so.include -j 6 V=1
 

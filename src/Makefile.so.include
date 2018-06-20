@@ -1,0 +1,21 @@
+include Makefile
+
+##################################################################
+
+local_rpc_OBJECTS = rpc/libbitcoin_cli_a-client.o test/test_qtum_local_rpc.o
+
+test/test_qtum_local_rpc.o: test/test_qtum_local_rpc.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	-I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin -I${JAVA_HOME}/include/linux \
+	$(test_test_qtum_CPPFLAGS) $(CPPFLAGS) $(test_test_qtum_CXXFLAGS) $(CXXFLAGS) \
+	-MT test/test_qtum_local_rpc.o -MD -MP -MF test/$(DEPDIR)/test_qtum_local_rpc.Tpo -c -o test/test_qtum_local_rpc.o test/test_qtum_local_rpc.cpp
+
+qtumrpc: $(qtumd_OBJECTS) $(qtumd_DEPENDENCIES) $(EXTRA_qtumd_DEPENDENCIES) $(local_rpc_OBJECTS)
+	$(AM_V_CXXLD)$(qtumd_LINK) $(qtumd_OBJECTS) $(qtumd_LDADD) $(LIBS) $(local_rpc_OBJECTS)
+
+qtumd.dylib: $(qtumd_OBJECTS) $(qtumd_DEPENDENCIES) $(EXTRA_qtumd_DEPENDENCIES) $(local_rpc_OBJECTS)
+	$(AM_V_CXXLD)$(qtumd_LINK) $(qtumd_OBJECTS) $(qtumd_LDADD) $(LIBS) $(local_rpc_OBJECTS) -dynamiclib
+
+qtumd.so: $(qtumd_OBJECTS) $(qtumd_DEPENDENCIES) $(EXTRA_qtumd_DEPENDENCIES) $(local_rpc_OBJECTS)
+	$(AM_V_CXXLD)$(qtumd_LINK) $(qtumd_OBJECTS) $(qtumd_LDADD) $(LIBS) $(local_rpc_OBJECTS) -shared
+
