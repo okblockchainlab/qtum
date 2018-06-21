@@ -407,7 +407,7 @@ UniValue verifytxoutproof(const JSONRPCRequest& request)
 }
 
 UniValue getaddressbyprivatekey(const JSONRPCRequest& request) {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || request.params.size() != 1)
         throw runtime_error(
                 "getaddressbyprivatekey \"privatekey\"\n"
                 "\nArguments:\n"

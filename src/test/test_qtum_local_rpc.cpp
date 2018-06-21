@@ -4,7 +4,7 @@
 
 #define BOOST_TEST_MODULE Bitcoin Test Suite
 
-#include "test/test_bitcoin_local_rpc.h"
+#include "test/test_qtum_local_rpc.h"
 
 #include "chainparams.h"
 #include "consensus/consensus.h"
