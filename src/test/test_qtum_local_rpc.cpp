@@ -24,8 +24,7 @@
 #include "base58.h"
 
 #include <memory>
-#include "com_okcoin_vault_jni_qtum_Qtumj.h"
-
+#include "com_okcoin_vault_jni_qtum_QtumNativeInvoke.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -161,9 +160,8 @@ TestingSetup::~TestingSetup()
     boost::filesystem::remove_all(pathTemp);
 }
 
-
 JNIEXPORT jobjectArray JNICALL
-Java_com_okcoin_vault_jni_qtum_Qtumj_execute(JNIEnv *env, jclass, jstring networkType, jstring command) {
+Java_com_okcoin_vault_jni_qtum_QtumNativeInvoke_execute(JNIEnv *env, jclass, jstring networkType, jstring command) {
 
     TestingSetup ts(jstring2char(env, networkType));
     std::list<std::string> resultList = invokeRpc(jstring2char(env, command));
