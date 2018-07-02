@@ -177,28 +177,28 @@ std::list<std::string> invokeRpc(std::string args)
     cout << "===================================================================" << endl;
     cout << "Rpc Request: " << args << endl;
 
-    std::list<std::string> resultList;
-    UniValue result;
-    std::vector<std::string> vArgs;
-    boost::split(vArgs, args, boost::is_any_of(" \t"));
-
-    std::string strMethod = vArgs[0];
-    vArgs.erase(vArgs.begin());
-    JSONRPCRequest request;
-    request.strMethod = strMethod;
-    request.params = RPCConvertValues(strMethod, vArgs);
-    request.fHelp = false;
-
-    if (tableRPC[strMethod] == NULL) {
-
-        resultList.push_back("Error");
-        resultList.push_back("No such a Jni Api " + strMethod);
-        return resultList;
-    }
-
-    string res;
-    rpcfn_type method = tableRPC[strMethod]->actor;
     try {
+        std::list <std::string> resultList;
+        UniValue result;
+        std::vector <std::string> vArgs;
+        boost::split(vArgs, args, boost::is_any_of(" \t"));
+
+        std::string strMethod = vArgs[0];
+        vArgs.erase(vArgs.begin());
+        JSONRPCRequest request;
+        request.strMethod = strMethod;
+        request.params = RPCConvertValues(strMethod, vArgs);
+        request.fHelp = false;
+
+        if (tableRPC[strMethod] == NULL) {
+
+            resultList.push_back("Error");
+            resultList.push_back("No such a Jni Api " + strMethod);
+            return resultList;
+        }
+
+        string res;
+        rpcfn_type method = tableRPC[strMethod]->actor;
         result = (*method)(request);
         result.feedStringList(resultList);
     }
@@ -207,6 +207,11 @@ std::list<std::string> invokeRpc(std::string args)
 
         resultList.push_back("Error");
         resultList.push_back(find_value(result.get_obj(), "message").get_str());
+    }
+    catch(...) {
+
+        resultList.push_back("Error");
+        resultList.push_back("Unknown exception!");
     }
     return resultList;
 }
