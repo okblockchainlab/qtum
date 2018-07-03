@@ -175,10 +175,10 @@ std::list<std::string> invokeRpc(std::string args)
     cout << "===================================================================" << endl;
     cout << "Rpc Request: " << args << endl;
 
+    std::list <std::string> resultList;
+    UniValue result;
+    std::vector <std::string> vArgs;
     try {
-        std::list <std::string> resultList;
-        UniValue result;
-        std::vector <std::string> vArgs;
         boost::split(vArgs, args, boost::is_any_of(" \t"));
 
         std::string strMethod = vArgs[0];
